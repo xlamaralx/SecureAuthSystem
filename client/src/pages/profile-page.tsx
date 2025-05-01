@@ -1,26 +1,31 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "@/i18n";
+import { useTheme } from "@/hooks/use-theme";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Loader2, Upload, User, X } from "lucide-react";
+import { Loader2, Palette, Upload, User, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { HexColorPicker } from "react-colorful";
 
 export default function ProfilePage() {
   const { user } = useAuth();
   const { t } = useTranslation();
+  const { theme, setTheme } = useTheme();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [profileImage, setProfileImage] = useState<string | null>(user?.profilePicture || null);
+  const [profileImage, setProfileImage] = useState<string | null>(null);
   const [name, setName] = useState(user?.name || "");
   const [email, setEmail] = useState(user?.email || "");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [accentColor, setAccentColor] = useState("#3b82f6");
+  const [showColorPicker, setShowColorPicker] = useState(false);
 
   const getInitials = (name: string) => {
     return name
@@ -189,6 +194,70 @@ export default function ProfilePage() {
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder={t('common.email')}
                     />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="accent-color">Cor de destaque</Label>
+                      <div 
+                        className="h-8 w-8 rounded-full border border-border cursor-pointer"
+                        style={{ backgroundColor: accentColor }}
+                        onClick={() => setShowColorPicker(!showColorPicker)}
+                      />
+                    </div>
+                    
+                    {showColorPicker && (
+                      <div className="mt-2 relative z-10">
+                        <div 
+                          className="fixed inset-0" 
+                          onClick={() => setShowColorPicker(false)}
+                        />
+                        <div className="absolute right-0">
+                          <HexColorPicker color={accentColor} onChange={setAccentColor} />
+                          <div className="flex items-center justify-between mt-2 bg-background p-2 rounded-md border">
+                            <div className="text-sm font-medium">{accentColor}</div>
+                            <Button 
+                              variant="secondary" 
+                              size="sm"
+                              onClick={() => {
+                                // Apply the color to CSS variables
+                                document.documentElement.style.setProperty('--color-primary', accentColor);
+                                setShowColorPicker(false);
+                                
+                                toast({
+                                  title: "Cor aplicada",
+                                  description: "A cor de destaque foi atualizada",
+                                });
+                              }}
+                            >
+                              Aplicar
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Tema</Label>
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant={theme === "light" ? "default" : "outline"}
+                        className="flex-1"
+                        onClick={() => setTheme("light")}
+                        type="button"
+                      >
+                        Claro
+                      </Button>
+                      <Button
+                        variant={theme === "dark" ? "default" : "outline"}
+                        className="flex-1"
+                        onClick={() => setTheme("dark")}
+                        type="button"
+                      >
+                        Escuro
+                      </Button>
+                    </div>
                   </div>
                   
                   <Button type="submit" disabled={isLoading} className="w-full">
