@@ -19,7 +19,16 @@ import { format } from "date-fns";
 import { Check, Loader2, Pencil, Plus, Trash, X } from "lucide-react";
 import { User } from "@shared/schema";
 
-type ExtendedUser = User & {
+// Vamos criar um tipo mais específico que corresponda ao que estamos usando
+type ExtendedUser = {
+  id: number;
+  name: string;
+  email: string;
+  password: string;
+  role: "admin" | "user";
+  authorized: boolean;
+  createdAt: string;
+  expirationDate: string | null;
   isEditing?: boolean;
 };
 
@@ -48,7 +57,7 @@ export function UserManagement() {
             role: "admin",
             authorized: true,
             createdAt: new Date().toISOString(),
-            expiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
+            expirationDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
           },
           {
             id: 2,
@@ -58,7 +67,7 @@ export function UserManagement() {
             role: "user",
             authorized: true,
             createdAt: new Date().toISOString(),
-            expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+            expirationDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
           },
           {
             id: 3,
@@ -68,7 +77,7 @@ export function UserManagement() {
             role: "user",
             authorized: false,
             createdAt: new Date().toISOString(),
-            expiresAt: null,
+            expirationDate: null,
           }
         ]);
       } finally {
@@ -92,7 +101,7 @@ export function UserManagement() {
         role: userData.role as "admin" | "user" || "user",
         authorized: userData.authorized || false,
         createdAt: new Date().toISOString(),
-        expiresAt: userData.expiresAt || null,
+        expirationDate: userData.expirationDate || null,
       };
       
       setUsers([...users, newUser]);
@@ -253,8 +262,8 @@ export function UserManagement() {
                     {format(new Date(userItem.createdAt), 'dd/MM/yyyy')}
                   </TableCell>
                   <TableCell>
-                    {userItem.expiresAt ? (
-                      format(new Date(userItem.expiresAt), 'dd/MM/yyyy')
+                    {userItem.expirationDate ? (
+                      format(new Date(userItem.expirationDate), 'dd/MM/yyyy')
                     ) : (
                       t('users.noExpirationDate')
                     )}
