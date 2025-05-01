@@ -219,5 +219,23 @@ export const t = createTranslator();
 
 // For compatibility with existing code, provide a minimal useTranslation hook
 export function useTranslation() {
-  return { t };
+  const [language, setLanguageState] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('preferredLanguage') || 'pt';
+    }
+    return 'pt';
+  });
+
+  const setLanguage = (newLang: string) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('preferredLanguage', newLang);
+      setLanguageState(newLang);
+    }
+  };
+
+  return { 
+    t, 
+    language, 
+    setLanguage 
+  };
 }

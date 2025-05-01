@@ -50,8 +50,8 @@ export function UserFormModal({
       setPassword("");
       setRole(user.role as "admin" | "user");
       setAuthorized(user.authorized || false);
-      setExpirationDate(user.expiresAt 
-        ? new Date(user.expiresAt).toISOString().split("T")[0] 
+      setExpirationDate(user.expirationDate 
+        ? new Date(user.expirationDate).toISOString().split("T")[0] 
         : "");
     } else {
       // Reset form when adding a new user
@@ -72,7 +72,7 @@ export function UserFormModal({
       email,
       role,
       authorized,
-      expiresAt: expirationDate ? new Date(expirationDate).toISOString() : null,
+      expirationDate: expirationDate ? new Date(expirationDate).toISOString() : null,
     };
     
     // Só incluímos a senha se estiver preenchida
