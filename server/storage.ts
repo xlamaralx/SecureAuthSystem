@@ -70,17 +70,33 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateUser(id: number, data: Partial<User>): Promise<User | undefined> {
-    if (data.password) {
-      data.password = await this.hashPassword(data.password);
-    }
+    try {
+      // Clone data to avoid modifying the original
+      const updateData = { ...data };
+      
+      // Hash password if provided
+      if (updateData.password) {
+        updateData.password = await this.hashPassword(updateData.password);
+      }
 
-    const [updatedUser] = await db
-      .update(users)
-      .set(data)
-      .where(eq(users.id, id))
-      .returning();
-    
-    return updatedUser;
+      // Processar a data de expiração - converter string para Date se necessário
+      if (updateData.expirationDate && typeof updateData.expirationDate === 'string') {
+        updateData.expirationDate = new Date(updateData.expirationDate);
+      }
+      
+      console.log("Atualizando usuário com dados:", JSON.stringify(updateData, null, 2));
+
+      const [updatedUser] = await db
+        .update(users)
+        .set(updateData)
+        .where(eq(users.id, id))
+        .returning();
+      
+      return updatedUser;
+    } catch (error) {
+      console.error("Error updating user:", error);
+      throw error;
+    }
   }
 
   async deleteUser(id: number): Promise<void> {
