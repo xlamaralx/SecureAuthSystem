@@ -136,13 +136,20 @@ export function UserManagement() {
     setIsLoading(true);
     
     try {
+      // Garantir que a data de expiração seja enviada como string
+      const userDataForApi = {
+        ...userData,
+        // Se for uma data, converter para string, senão manter como está
+        expirationDate: userData.expirationDate
+      };
+      
       // Enviar solicitação para atualizar um usuário
       const response = await fetch(`/api/users/${userToEdit.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(userData),
+        body: JSON.stringify(userDataForApi),
       });
       
       if (!response.ok) {
@@ -154,10 +161,10 @@ export function UserManagement() {
       // Atualizar o usuário na lista
       const updatedUser: ExtendedUser = {
         ...userToEdit,
-        name: updatedUserData.name,
-        email: updatedUserData.email,
-        role: updatedUserData.role,
-        authorized: updatedUserData.authorized,
+        name: updatedUserData.name || userToEdit.name,
+        email: updatedUserData.email || userToEdit.email,
+        role: updatedUserData.role || userToEdit.role,
+        authorized: updatedUserData.authorized ?? userToEdit.authorized,
         expirationDate: updatedUserData.expirationDate,
       };
       
@@ -166,7 +173,7 @@ export function UserManagement() {
       
       toast({
         title: t('users.userUpdated'),
-        description: updatedUserData.name,
+        description: updatedUser.name,
       });
     } catch (error) {
       toast({

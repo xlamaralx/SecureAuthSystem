@@ -43,26 +43,30 @@ export function UserFormModal({
   const [authorized, setAuthorized] = useState(false);
   const [expirationDate, setExpirationDate] = useState("");
   
+  // Limpar o formulário quando o modal é aberto ou fechado
   useEffect(() => {
-    if (user) {
-      setName(user.name);
-      setEmail(user.email);
-      setPassword("");
-      setRole(user.role as "admin" | "user");
-      setAuthorized(user.authorized || false);
-      setExpirationDate(user.expirationDate 
-        ? new Date(user.expirationDate).toISOString().split("T")[0] 
-        : "");
-    } else {
-      // Reset form when adding a new user
-      setName("");
-      setEmail("");
-      setPassword("");
-      setRole("user");
-      setAuthorized(false);
-      setExpirationDate("");
+    if (isOpen) {
+      if (user) {
+        // Caso de edição de usuário existente
+        setName(user.name);
+        setEmail(user.email);
+        setPassword("");
+        setRole(user.role as "admin" | "user");
+        setAuthorized(user.authorized || false);
+        setExpirationDate(user.expirationDate 
+          ? new Date(user.expirationDate).toISOString().split("T")[0] 
+          : "");
+      } else {
+        // Caso de adição de novo usuário - sempre limpar o formulário
+        setName("");
+        setEmail("");
+        setPassword("");
+        setRole("user");
+        setAuthorized(false);
+        setExpirationDate("");
+      }
     }
-  }, [user]);
+  }, [user, isOpen]);
   
   const handleSubmit = () => {
     setIsLoading(true);
@@ -72,7 +76,8 @@ export function UserFormModal({
       email,
       role,
       authorized,
-      expirationDate: expirationDate ? new Date(expirationDate).toISOString() : null,
+      // Enviar a data diretamente como string para evitar problema de conversão
+      expirationDate: expirationDate ? expirationDate : null,
     };
     
     // Só incluímos a senha se estiver preenchida
