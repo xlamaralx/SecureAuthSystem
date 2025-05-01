@@ -1,6 +1,16 @@
-import { X } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Loader2, Trash } from "lucide-react";
+import { useState } from "react";
 
 interface DeleteConfirmModalProps {
   isOpen: boolean;
@@ -9,36 +19,53 @@ interface DeleteConfirmModalProps {
   userName: string;
 }
 
-export function DeleteConfirmModal({ isOpen, onClose, onConfirm, userName }: DeleteConfirmModalProps) {
+export function DeleteConfirmModal({
+  isOpen,
+  onClose,
+  onConfirm,
+  userName,
+}: DeleteConfirmModalProps) {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleConfirm = async () => {
+    setIsLoading(true);
+    try {
+      await onConfirm();
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Confirmar Exclusão</DialogTitle>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="absolute right-4 top-4" 
-            onClick={onClose}
+    <AlertDialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+          <AlertDialogDescription>
+            Tem certeza que deseja excluir o usuário <strong>{userName}</strong>? Esta ação não pode ser desfeita.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isLoading}>Cancelar</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={(e) => {
+              e.preventDefault();
+              handleConfirm();
+            }}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            disabled={isLoading}
           >
-            <X className="h-4 w-4" />
-          </Button>
-        </DialogHeader>
-        
-        <p className="mb-6">
-          Tem certeza que deseja excluir o usuário <span className="font-medium">{userName}</span>? 
-          Esta ação não pode ser desfeita.
-        </p>
-        
-        <div className="flex justify-end space-x-2">
-          <Button variant="outline" onClick={onClose}>
-            Cancelar
-          </Button>
-          <Button variant="destructive" onClick={onConfirm}>
+            {isLoading ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Trash className="mr-2 h-4 w-4" />
+            )}
             Excluir
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

@@ -75,6 +75,14 @@ export function setupAuth(app: Express) {
         return res.status(401).json({ message: info.message || "Authentication failed" });
       }
       
+      // Check if user is authorized (unless they're an admin)
+      if (user.role !== "admin" && !user.authorized) {
+        return res.status(403).json({ 
+          message: "Your account is pending approval. Please contact an administrator.",
+          notAuthorized: true
+        });
+      }
+      
       try {
         // Generate 2FA code
         const code = await storage.generateTwoFactorCode(user.email);
@@ -198,5 +206,101 @@ export function setupAuth(app: Express) {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     const { password, ...user } = req.user as User;
     res.json(user);
+  });
+  
+  // API para listar todos os usuários (apenas para admins)
+  app.get("/api/users", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    if (req.user.role !== "admin") return res.status(403).json({ message: "Unauthorized" });
+    
+    try {
+      const users = await storage.getAllUsers();
+      // Remove as senhas antes de enviar
+      const usersWithoutPasswords = users.map(user => {
+        const { password, ...userWithoutPassword } = user;
+        return userWithoutPassword;
+      });
+      
+      res.json(usersWithoutPasswords);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+  
+  // API para atualizar um usuário
+  app.put("/api/users/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    const userId = parseInt(req.params.id);
+    
+    // Apenas admins podem editar outros usuários
+    if (req.user.role !== "admin" && req.user.id !== userId) {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      // Se não for admin, remova campos sensíveis que o usuário não deve alterar
+      let dataToUpdate = req.body;
+      if (req.user.role !== "admin") {
+        const { role, authorized, ...safeData } = dataToUpdate;
+        dataToUpdate = safeData;
+      }
+      
+      const updatedUser = await storage.updateUser(userId, dataToUpdate);
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Remove senha antes de enviar
+      const { password, ...userWithoutPassword } = updatedUser;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error("Error updating user:", error);
+      res.status(500).json({ message: "Failed to update user" });
+    }
+  });
+  
+  // API para excluir um usuário (apenas para admins)
+  app.delete("/api/users/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    if (req.user.role !== "admin") return res.status(403).json({ message: "Unauthorized" });
+    
+    const userId = parseInt(req.params.id);
+    
+    // Não permitir que um admin exclua a si mesmo
+    if (req.user.id === userId) {
+      return res.status(400).json({ message: "Cannot delete your own account" });
+    }
+    
+    try {
+      await storage.deleteUser(userId);
+      res.status(200).json({ message: "User deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      res.status(500).json({ message: "Failed to delete user" });
+    }
+  });
+  
+  // API para criar um usuário (apenas para admins)
+  app.post("/api/users", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    if (req.user.role !== "admin") return res.status(403).json({ message: "Unauthorized" });
+    
+    try {
+      const existingUser = await storage.getUserByEmail(req.body.email);
+      if (existingUser) {
+        return res.status(400).json({ message: "Email already registered" });
+      }
+      
+      const user = await storage.createUser(req.body);
+      
+      // Remove senha antes de enviar
+      const { password, ...userWithoutPassword } = user;
+      res.status(201).json(userWithoutPassword);
+    } catch (error) {
+      console.error("Error creating user:", error);
+      res.status(500).json({ message: "Failed to create user" });
+    }
   });
 }
