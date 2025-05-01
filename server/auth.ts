@@ -44,6 +44,11 @@ export function setupAuth(app: Express) {
           if (!isValid) {
             return done(null, false, { message: "Invalid email or password" });
           }
+          
+          // Check if user is authorized (not needed for admin users)
+          if (user.role !== "admin" && !user.authorized) {
+            return done(null, false, { message: "Your account is pending approval. Please contact an administrator." });
+          }
   
           return done(null, user);
         } catch (error) {

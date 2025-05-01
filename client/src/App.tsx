@@ -12,11 +12,20 @@ import { ThemeProvider } from "./hooks/use-theme";
 import { LayoutProvider } from "./hooks/use-layout";
 import { ApolloProvider } from "@apollo/client";
 import { client } from "./lib/apollo-client";
+// Implementaremos o suporte multilíngue posteriormente
+
+// Vamos importar as novas páginas quando precisarmos delas
+const ProfilePage = () => <div>Profile Page</div>;
+const SettingsPage = () => <div>Settings Page</div>;
+const UsersPage = () => <div>Users Page</div>;
 
 function Router() {
   return (
     <Switch>
       <ProtectedRoute path="/" component={DashboardPage} />
+      <ProtectedRoute path="/profile" component={ProfilePage} />
+      <ProtectedRoute path="/settings" component={SettingsPage} />
+      <ProtectedRoute path="/users" component={UsersPage} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>
