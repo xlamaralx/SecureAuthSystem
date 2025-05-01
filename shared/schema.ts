@@ -15,6 +15,11 @@ export enum UserTheme {
   ORANGE = "orange",
 }
 
+export enum LayoutType {
+  SIDEBAR = "sidebar",
+  TOPNAV = "topnav",
+}
+
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
@@ -28,6 +33,7 @@ export const users = pgTable("users", {
   preferredLanguage: text("preferred_language").default("pt"),
   theme: text("theme", { enum: ["default", "blue", "green", "purple", "orange"] }).default("default"),
   accentColor: text("accent_color").default("#3498db"),
+  layout: text("layout", { enum: ["sidebar", "topnav"] }).default("sidebar"),
   twoFactorCode: text("two_factor_code"),
   twoFactorCodeExpires: timestamp("two_factor_code_expires"),
   resetPasswordToken: text("reset_password_token"),

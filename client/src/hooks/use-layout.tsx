@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 type Layout = "sidebar" | "topnav";
 
@@ -23,12 +23,18 @@ const LayoutContext = createContext<LayoutProviderState>(initialState);
 export function LayoutProvider({
   children,
   defaultLayout = "sidebar",
-  storageKey = "vite-ui-layout",
-  ...props
+  storageKey = "ui-layout",
 }: LayoutProviderProps) {
   const [layout, setLayout] = useState<Layout>(
     () => (localStorage.getItem(storageKey) as Layout) || defaultLayout
   );
+
+  useEffect(() => {
+    // You can add additional logic here if needed when layout changes
+    // For example, you could adjust some global CSS variables or event listeners
+    const body = document.body;
+    body.dataset.layout = layout;
+  }, [layout]);
 
   const value = {
     layout,
@@ -39,7 +45,7 @@ export function LayoutProvider({
   };
 
   return (
-    <LayoutContext.Provider {...props} value={value}>
+    <LayoutContext.Provider value={value}>
       {children}
     </LayoutContext.Provider>
   );
@@ -47,9 +53,8 @@ export function LayoutProvider({
 
 export const useLayout = () => {
   const context = useContext(LayoutContext);
-
-  if (context === undefined)
+  if (context === undefined) {
     throw new Error("useLayout must be used within a LayoutProvider");
-
+  }
   return context;
 };
