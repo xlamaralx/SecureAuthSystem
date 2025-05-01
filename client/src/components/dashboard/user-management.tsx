@@ -46,70 +46,78 @@ export function UserManagement() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        // Isso seria uma consulta para obter todos os usuários
-        // Mock data por enquanto
-        setUsers([
-          {
-            id: 1,
-            name: "Admin User",
-            email: "admin@example.com",
-            password: "",
-            role: "admin",
-            authorized: true,
-            createdAt: new Date().toISOString(),
-            expirationDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
-          },
-          {
-            id: 2,
-            name: "Normal User",
-            email: "user@example.com",
-            password: "",
-            role: "user",
-            authorized: true,
-            createdAt: new Date().toISOString(),
-            expirationDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-          },
-          {
-            id: 3,
-            name: "Pending User",
-            email: "pending@example.com",
-            password: "",
-            role: "user",
-            authorized: false,
-            createdAt: new Date().toISOString(),
-            expirationDate: null,
-          }
-        ]);
+        // Buscar usuários do servidor
+        const response = await fetch('/api/users');
+        
+        if (!response.ok) {
+          throw new Error('Falha ao buscar usuários');
+        }
+        
+        const data = await response.json();
+        
+        // Converter os dados para o formato ExtendedUser
+        const formattedUsers: ExtendedUser[] = data.map((user: any) => ({
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          password: "",
+          role: user.role,
+          authorized: user.authorized,
+          createdAt: user.createdAt,
+          expirationDate: user.expirationDate,
+        }));
+        
+        setUsers(formattedUsers);
+      } catch (error) {
+        toast({
+          title: t('common.error'),
+          description: String(error),
+          variant: "destructive",
+        });
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchUsers();
-  }, []);
+  }, [t, toast]);
 
-  const handleAddUser = (userData: Partial<User>) => {
+  const handleAddUser = async (userData: Partial<User>) => {
     setIsLoading(true);
     
     try {
-      // Isso seria uma mutação para adicionar um usuário
-      const newUser: ExtendedUser = {
-        id: users.length + 1,
-        name: userData.name || "",
-        email: userData.email || "",
-        password: userData.password || "",
-        role: userData.role as "admin" | "user" || "user",
-        authorized: userData.authorized || false,
-        createdAt: new Date().toISOString(),
-        expirationDate: userData.expirationDate || null,
-      };
+      // Enviar solicitação para adicionar um usuário
+      const response = await fetch('/api/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+      });
       
-      setUsers([...users, newUser]);
+      if (!response.ok) {
+        throw new Error('Falha ao adicionar usuário');
+      }
+      
+      const newUser = await response.json();
+      
+      // Atualizar a lista de usuários com o novo usuário
+      setUsers([...users, {
+        id: newUser.id,
+        name: newUser.name,
+        email: newUser.email,
+        password: "",
+        role: newUser.role,
+        authorized: newUser.authorized,
+        createdAt: newUser.createdAt,
+        expirationDate: newUser.expirationDate,
+      }]);
+      
       setShowAddUserModal(false);
       
       toast({
         title: t('users.userAdded'),
-        description: userData.name,
+        description: newUser.name,
       });
     } catch (error) {
       toast({
@@ -122,16 +130,35 @@ export function UserManagement() {
     }
   };
 
-  const handleUpdateUser = (userData: Partial<User>) => {
+  const handleUpdateUser = async (userData: Partial<User>) => {
     if (!userToEdit) return;
     
     setIsLoading(true);
     
     try {
-      // Isso seria uma mutação para atualizar um usuário
+      // Enviar solicitação para atualizar um usuário
+      const response = await fetch(`/api/users/${userToEdit.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Falha ao atualizar usuário');
+      }
+      
+      const updatedUserData = await response.json();
+      
+      // Atualizar o usuário na lista
       const updatedUser: ExtendedUser = {
         ...userToEdit,
-        ...userData,
+        name: updatedUserData.name,
+        email: updatedUserData.email,
+        role: updatedUserData.role,
+        authorized: updatedUserData.authorized,
+        expirationDate: updatedUserData.expirationDate,
       };
       
       setUsers(users.map(u => u.id === userToEdit.id ? updatedUser : u));
@@ -139,7 +166,7 @@ export function UserManagement() {
       
       toast({
         title: t('users.userUpdated'),
-        description: userData.name,
+        description: updatedUserData.name,
       });
     } catch (error) {
       toast({
@@ -152,13 +179,22 @@ export function UserManagement() {
     }
   };
 
-  const handleDeleteUser = () => {
+  const handleDeleteUser = async () => {
     if (!userToDelete) return;
     
     setIsLoading(true);
     
     try {
-      // Isso seria uma mutação para excluir um usuário
+      // Enviar solicitação para excluir um usuário
+      const response = await fetch(`/api/users/${userToDelete.id}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Falha ao excluir usuário');
+      }
+      
+      // Remover o usuário da lista
       setUsers(users.filter(u => u.id !== userToDelete.id));
       setUserToDelete(null);
       
@@ -177,11 +213,24 @@ export function UserManagement() {
     }
   };
 
-  const handleToggleAuthorization = (userItem: ExtendedUser, authorized: boolean) => {
+  const handleToggleAuthorization = async (userItem: ExtendedUser, authorized: boolean) => {
     setIsLoading(true);
     
     try {
-      // Isso seria uma mutação para alternar a autorização do usuário
+      // Enviar solicitação para atualizar a autorização do usuário
+      const response = await fetch(`/api/users/${userItem.id}/authorize`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ authorized }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Falha ao atualizar autorização do usuário');
+      }
+      
+      // Atualizar o usuário na lista
       const updatedUser = { ...userItem, authorized };
       setUsers(users.map(u => u.id === userItem.id ? updatedUser : u));
       
