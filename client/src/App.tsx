@@ -6,18 +6,15 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
 import DashboardPage from "@/pages/dashboard-page";
+import ProfilePage from "@/pages/profile-page";
+import SettingsPage from "@/pages/settings-page";
+import UsersPage from "@/pages/users-page";
 import { ProtectedRoute } from "./lib/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
 import { ThemeProvider } from "./hooks/use-theme";
 import { LayoutProvider } from "./hooks/use-layout";
 import { ApolloProvider } from "@apollo/client";
 import { client } from "./lib/apollo-client";
-// Implementaremos o suporte multilíngue posteriormente
-
-// Vamos importar as novas páginas quando precisarmos delas
-const ProfilePage = () => <div>Profile Page</div>;
-const SettingsPage = () => <div>Settings Page</div>;
-const UsersPage = () => <div>Users Page</div>;
 
 function Router() {
   return (

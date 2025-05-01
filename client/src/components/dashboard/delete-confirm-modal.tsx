@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { useTranslation } from "@/i18n";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -8,9 +10,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
-import { Loader2, Trash } from "lucide-react";
-import { useState } from "react";
+import { Loader2 } from "lucide-react";
 
 interface DeleteConfirmModalProps {
   isOpen: boolean;
@@ -25,44 +25,35 @@ export function DeleteConfirmModal({
   onConfirm,
   userName,
 }: DeleteConfirmModalProps) {
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
-
-  const handleConfirm = async () => {
+  
+  const handleConfirm = () => {
     setIsLoading(true);
-    try {
-      await onConfirm();
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsLoading(false);
-    }
+    onConfirm();
+    setIsLoading(false);
   };
-
+  
   return (
     <AlertDialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+          <AlertDialogTitle>{t('users.deleteUser')}</AlertDialogTitle>
           <AlertDialogDescription>
-            Tem certeza que deseja excluir o usuário <strong>{userName}</strong>? Esta ação não pode ser desfeita.
+            {t('users.deleteConfirmation')}
+            <br />
+            <strong>{userName}</strong>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isLoading}>Cancelar</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={(e) => {
-              e.preventDefault();
-              handleConfirm();
-            }}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+          <AlertDialogAction 
+            onClick={handleConfirm}
             disabled={isLoading}
+            className="bg-destructive hover:bg-destructive/90"
           >
-            {isLoading ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Trash className="mr-2 h-4 w-4" />
-            )}
-            Excluir
+            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {t('users.deleteUser')}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
